@@ -1,0 +1,45 @@
+{
+  "alert_timeframes": [
+    "Weekly"
+  ],
+  "alert_distance_pct": 1,
+  "bases": [
+    1
+  ],
+  "baseMax": 50,
+  "openEdge": true,
+  "zoneEdge": true,
+  "legBodyOn": true,
+  "legIn": 60,
+  "legOut": 60,
+  "legLarger": true,
+  "legCompare": "Body",
+  "legInMultOn": true,
+  "legInMult": 3,
+  "legOutMultOn": true,
+  "legOutMult": 4,
+  "pats": {
+    "RBR": false,
+    "DBR": true,
+    "DBD": false,
+    "RBD": true
+  },
+  "confBars": 20,
+  "confBody": 50,
+  "cancelEnter": true,
+  "curPrice": true,
+  "seq": false,
+  "retestDir": true,
+  "touchTol": 0,
+  "slBufOn": false,
+  "slBuf": 0.02,
+  "rr": 5,
+  "entryEdge": true,
+  "entryBody": false,
+  "maxZ": 50,
+  "disp": "Both",
+  "emaOn": false,
+  "emaFast": 20,
+  "emaSlow": 50,
+  "look": 100
+}
