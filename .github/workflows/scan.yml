@@ -1,0 +1,31 @@
+name: Zone Scan
+on:
+  schedule:
+    - cron: "30 4-10 * * 1-5"   # Mon-Fri, 10:00 AM se 4:00 PM IST, har ghante
+  workflow_dispatch:             # manual "Run workflow" button
+permissions:
+  contents: write
+concurrency: zone-scan
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install flask requests pandas
+      - run: python scan.py
+        env:
+          UPSTOX_TOKEN: ${{ secrets.UPSTOX_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node alert.js
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      - run: |
+          git config user.name "scanner-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add docs/data.json docs/candles.json docs/alerts.json
+          git diff --cached --quiet || (git commit -m "update zones" && git push)
