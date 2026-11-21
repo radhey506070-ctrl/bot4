@@ -8,7 +8,7 @@ h1{margin:24px 0 4px;color:#cfcfcf}.sub{color:#9aa5b1;font-size:14px}
 .seg{display:flex;border:1px solid #8a94a0;border-radius:12px;padding:4px;gap:4px}
 .seg button{background:none;border:0;color:#cbd2d9;padding:10px 16px;border-radius:9px;font-size:14px;cursor:pointer}
 .seg button.on{background:#c9a227;color:#111;font-weight:600}
-.tabs{display:flex;gap:18px;overflow-x:auto;padding:22px 16px 10px;border-bottom:1px solid #2a3642;justify-content:center}
+.tabs{display:flex;flex-wrap:wrap;gap:10px 16px;padding:22px 16px 10px;border-bottom:1px solid #2a3642;justify-content:center}
 .tabs span{color:#aab3bd;cursor:pointer;white-space:nowrap;padding-bottom:8px}
 .tabs span.on{color:#c9a227;border-bottom:2px solid #c9a227}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:16px;max-width:900px;margin:auto}
@@ -45,10 +45,10 @@ h1{margin:24px 0 4px;color:#cfcfcf}.sub{color:#9aa5b1;font-size:14px}
 </div></div>
 <script src="zones.js"></script>
 <script>
-const TFS=["Daily","Weekly","Monthly","Quarterly","Half Yearly","Yearly"],DEF=ZN.DEF;
+const TFS=["1m","3m","5m","10m","15m","30m","1h","2h","4h","Daily","Weekly","Monthly","Quarterly","Half Yearly","Yearly"],DEF=ZN.DEF;
 let S=JSON.parse(JSON.stringify(DEF));
 try{const x=JSON.parse(localStorage.getItem("zs3")||"{}");S={...S,...x,pats:{...S.pats,...(x.pats||{})}}}catch(e){}
-let s={tf:"Weekly",crit:"zone",zone:"supply"},D=null,CD=null,CACHE={};
+let s={tf:"Weekly",crit:"zone",zone:"supply"},D=null,CD={},CACHE={};
 const $=id=>document.getElementById(id);
 $("tfs").innerHTML=TFS.map(t=>`<span data-v="${t}" class="${t==s.tf?'on':''}">${t}</span>`).join("");
 function bind(id,key){$(id).onclick=e=>{const v=e.target.dataset.v;if(!v)return;s[key]=v;
@@ -63,9 +63,10 @@ const TL={U:["&#9650; Up","U"],D:["&#9660; Down","Dn"],S:["&#9654; Side","S"]};
 function trendRow(t){return '<div class="tr">'+[["D","Daily"],["W","Weekly"],["M","Monthly"]].map(([a,f])=>{const x=TL[t[f]];
  return x?`<i class="${x[1]}">${a} ${x[0]}</i>`:`<i>${a} -</i>`}).join("")+'</div>'}
 const f2=x=>x.toFixed(2);
+async function ensure(tf){if(CD[tf])return;try{CD[tf]=await (await fetch(`c_${tf.replace(/ /g,"_")}.json?`+Date.now())).json()}catch(e){CD[tf]={}}}
 
-function render(){
- if(!CD)return;const out=[];
+async function render(){
+ if(!D)return;await ensure(s.tf);const out=[];
  for(const [sym,v] of Object.entries(zonesFor(s.tf))){
   const b=ZN.pick(v,s.zone,s.crit,S);if(!b||!ZN.emaOK(CD[s.tf][sym],s.zone,S))continue;
   out.push({sym,b,t:ZN.trade(b,s.zone,S),tr:(D.trend||{})[sym]||{}})}
@@ -77,7 +78,7 @@ function render(){
  <small class="${b.tested?'bad':''}">${b.tested?'Tested':'Fresh'} | LTP ${f2(b.c)}</small>
  <small class="trd">E ${f2(t.entry)} | SL ${f2(t.sl)} | TP ${f2(t.tp)}</small>${trendRow(tr)}</a>`).join("")||'<div class="sub">Koi stock match nahi hua</div>';
 }
-function popup(){const L=[],tfs=S.pop||D.alert_tfs||["Weekly"];
+async function popup(){const L=[],tfs=S.pop||D.alert_tfs||["Weekly"];await Promise.all(tfs.map(ensure));
  for(const tf of tfs)for(const [sym,v] of Object.entries(zonesFor(tf)))for(const zt of ["demand","supply"]){
   const b=ZN.pick(v,zt,"approach",S);if(b&&ZN.emaOK(CD[tf][sym],zt,S))L.push({sym,tf,zt,dist:b.dist})}
  if(!L.length)return;L.sort((a,b)=>a.dist-b.dist);
@@ -123,7 +124,6 @@ function applySet(){const n={...S};
  $("set").style.display="none";render();popup()}
 function resetSet(){S=JSON.parse(JSON.stringify(DEF));try{localStorage.removeItem("zs3")}catch(e){}openSet()}
 
-Promise.all([fetch("data.json?"+Date.now()).then(r=>r.json()),fetch("candles.json?"+Date.now()).then(r=>r.json())])
- .then(([d,c])=>{D=d;CD=c;render();popup()})
+fetch("data.json?"+Date.now()).then(r=>r.json()).then(d=>{D=d;render();popup()})
  .catch(()=>$("st").textContent="Data nahi mila - Actions mein pehle ek baar Run workflow karein");
 </script></body></html>
