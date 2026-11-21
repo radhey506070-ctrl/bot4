@@ -3,6 +3,7 @@
     "Weekly"
   ],
   "alert_distance_pct": 1,
+  "intraday": true,
   "bases": [
     1
   ],
